@@ -24,7 +24,7 @@ const renderCountry = function (data, className = '') {
           </div>
         </article>`;
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
+  // countriesContainer.style.opacity = 1;
 };
 
 // const getCountryAndNeighbour = function (country) {
@@ -77,6 +77,11 @@ const getCountryData = function (country) {
   fetch(`https://restcountries.com/v2/name/${country}`)
     .then(function (response) {
       console.log(response);
+
+      // Throwing errors manually//
+      if (!response.ok)
+        throw new Error(`Country not found (${response.status})`);
+
       // The JSON Method here is a Mehtod that is available on all the  response objects that is coming from the fetch function.
       // Now the Problem here is that this JSON fun itself is actually also an ASYC function... It will also return a new promise.
       // We need to return this promise from here because this also returns a promise.. We also need to handle that promise as well
@@ -93,6 +98,17 @@ const getCountryData = function (country) {
       return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
     })
     .then(response => response.json())
-    .then(data => renderCountry(data, 'neighbour'));
+    .then(data => renderCountry(data, 'neighbour'))
+
+    ////////////////////////////
+    ///// HANDLING REJECTED PROMISES//////
+    .catch(err => console.log(`${err}`))
+    .finally(function () {
+      countriesContainer.style.opacity = 1;
+    });
 };
-getCountryData('iran');
+
+btn.addEventListener('click', function () {
+  getCountryData('iran');
+});
+getCountryData('jjdhdjjd');

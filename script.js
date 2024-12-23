@@ -24,8 +24,21 @@ const renderCountry = function (data, className = '') {
           </div>
         </article>`;
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  // countriesContainer.style.opacity = 1;
+  countriesContainer.style.opacity = 1;
 };
+
+// const renderError = function (msg) {
+//   countriesContainer.insertAdjacentText('beforeend', msg);
+//   countriesContainer.style.opacity = 1;
+// };
+
+// const getJSON = function (url, errorMsg = 'Something went wrong') {
+//   return fetch(url).then(response => {
+//     if (!response.ok) throw new Error(`${errorMsg} (${response.status})`);
+
+//     return response.json();
+//   });
+// };
 
 // const getCountryAndNeighbour = function (country) {
 //   // AJAX call country 1;
@@ -69,46 +82,74 @@ const renderCountry = function (data, className = '') {
 /////////////////////////////////////////
 ////CONSUMING PROMISES/////////
 //////////////////////////////////////////
-const getCountryData = function (country) {
-  // calling the fetch func like this will then immediately return a promise so as soon as we start the req.
-  // In beginning this promise is still pending because the ASYNDHRONOUS task of getting the data is still running in the background.
-  // TO HANDEL THE FULLFILLED STATE WE CAN USE THE then method that is available on all promises.
-  // In the CALL BACK FUN in THEN Method we Name the Argumet response because this is the Response of an AJAX Call
-  fetch(`https://restcountries.com/v2/name/${country}`)
-    .then(function (response) {
-      console.log(response);
+// const getCountryData = function (country) {
+//   // calling the fetch func like this will then immediately return a promise so as soon as we start the req.
+//   // In beginning this promise is still pending because the ASYNDHRONOUS task of getting the data is still running in the background.
+//   // TO HANDEL THE FULLFILLED STATE WE CAN USE THE then method that is available on all promises.
+//   // In the CALL BACK FUN in THEN Method we Name the Argumet response because this is the Response of an AJAX Call
+//   fetch(`https://restcountries.com/v2/name/${country}`)
+//     .then(function (response) {
+//       console.log(response);
 
-      // Throwing errors manually//
-      if (!response.ok)
-        throw new Error(`Country not found (${response.status})`);
+//       // Throwing errors manually//
+//       if (!response.ok)
+//         throw new Error(`Country not found (${response.status})`);
 
-      // The JSON Method here is a Mehtod that is available on all the  response objects that is coming from the fetch function.
-      // Now the Problem here is that this JSON fun itself is actually also an ASYC function... It will also return a new promise.
-      // We need to return this promise from here because this also returns a promise.. We also need to handle that promise as well
-      return response.json();
+//       // The JSON Method here is a Mehtod that is available on all the  response objects that is coming from the fetch function.
+//       // Now the Problem here is that this JSON fun itself is actually also an ASYC function... It will also return a new promise.
+//       // We need to return this promise from here because this also returns a promise.. We also need to handle that promise as well
+//       return response.json();
+//     })
+
+//     .then(function (data) {
+//       console.log(data);
+//       renderCountry(data[0]);
+//       const neighbour = data[0].borders[0];
+
+//       if (!neighbour) return;
+//       //By returning this promise here then the fullfilled value of the next then method will be fullfilled value of this previous promise
+//       return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
+//     })
+//     .then(response => response.json())
+//     .then(data => renderCountry(data, 'neighbour'))
+
+//     ////////////////////////////
+//     ///// HANDLING REJECTED PROMISES//////
+//     .catch(err => console.log(`${err}`))
+//     .finally(function () {
+//       countriesContainer.style.opacity = 1;
+//     });
+// };
+
+// btn.addEventListener('click', function () {
+//   getCountryData('iran');
+// });
+
+// Challange///
+
+const whereAmI = function (lat, lng) {
+  fetch(
+    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`
+  )
+    .then(res => {
+      if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
+      return res.json();
     })
-
-    .then(function (data) {
+    .then(data => {
       console.log(data);
-      renderCountry(data[0]);
-      const neighbour = data[0].borders[0];
+      console.log(`You are in ${data.city}, ${data.countryName}`);
 
-      if (!neighbour) return;
-      //By returning this promise here then the fullfilled value of the next then method will be fullfilled value of this previous promise
-      return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
+      // Fetch country data using the country name from the geocode API
+      return fetch(`https://restcountries.com/v2/name/${data.countryName}`);
     })
-    .then(response => response.json())
-    .then(data => renderCountry(data, 'neighbour'))
+    .then(res => {
+      if (!res.ok) throw new Error(`Country not found (${res.status})`);
 
-    ////////////////////////////
-    ///// HANDLING REJECTED PROMISES//////
-    .catch(err => console.log(`${err}`))
-    .finally(function () {
-      countriesContainer.style.opacity = 1;
-    });
+      return res.json();
+    })
+    .then(data => renderCountry(data[0])) // Render country data
+    .catch(err => console.error(`${err.message} 💥`)); // Handle errors
 };
-
-btn.addEventListener('click', function () {
-  getCountryData('iran');
-});
-getCountryData('jjdhdjjd');
+whereAmI(52.508, 13.381); // Berlin, Germany
+whereAmI(19.037, 72.873); // Mumbai, India
+whereAmI(-33.933, 18.474); // Cape Town, South Africa

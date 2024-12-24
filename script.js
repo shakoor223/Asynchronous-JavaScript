@@ -127,29 +127,107 @@ const renderCountry = function (data, className = '') {
 
 // Challange///
 
-const whereAmI = function (lat, lng) {
-  fetch(
-    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`
-  )
+// const whereAmI = function (lat, lng) {
+//   fetch(
+//     `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`
+//   )
+//     .then(res => {
+//       if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
+//       return res.json();
+//     })
+//     .then(data => {
+//       console.log(data);
+//       console.log(`You are in ${data.city}, ${data.countryName}`);
+
+//       // Fetch country data using the country name from the geocode API
+//       return fetch(`https://restcountries.com/v2/name/${data.countryName}`);
+//     })
+//     .then(res => {
+//       if (!res.ok) throw new Error(`Country not found (${res.status})`);
+
+//       return res.json();
+//     })
+//     .then(data => renderCountry(data[0])) // Render country data
+//     .catch(err => console.error(`${err.message} 💥`)); // Handle errors
+// };
+// whereAmI(52.508, 13.381); // Berlin, Germany
+// whereAmI(19.037, 72.873); // Mumbai, India
+// whereAmI(-33.933, 18.474); // Cape Town, South Africa
+
+///////////////////////////////////////
+/// Building a simple promise///
+// the executor function will contain the asunchronous behaviour that we are trying to handle with the promise
+// As soon as the promise constructor  runs it will automatically execute this executor function that we pass in
+// as it executes this fun here it will do so by passing in two other arguments
+// takes one argument so called executor function
+// Promises are essentially just a special kind of object in javascript.
+const lotteryPromise = new Promise(function (resolve, reject) {
+  // now in the resolve fun here we pass the fullfilled value of the promise so that it can later be consumed with the then method.. whatever value we  pass into the resolve fun here is gonna be the result of the promise that will be available in the then handler
+  console.log('Lottery draw is happening');
+
+  setTimeout(function () {
+    if (Math.random() >= 0.5) {
+      resolve('You Win ');
+    } else {
+      reject(new Error('You Lost Your Money'));
+    }
+  }, 2000);
+});
+
+lotteryPromise
+  .then(function (res) {
+    console.log(res);
+  })
+  .catch(err => console.log(err));
+
+// promsifying setTimeout
+const wait = function (seconds) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+wait(2).then(() => {
+  console.log('i waited for 2 seconds');
+  return wait(1).then(() => {
+    console.log('i waited for 1 second');
+    return wait(3).then(() => {
+      console.log('i waited for 3 seconds');
+    });
+  });
+});
+
+/// promsifying geolocation api
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+getPosition().then(function (pos) {
+  console.log(pos);
+});
+
+const whereAmI = function () {
+  getPosition()
+    .then(pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+
+      return fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}`
+      );
+    })
     .then(res => {
-      if (!res.ok) throw new Error(`Problem with geocoding ${res.status}`);
+      if (!res.ok) throw new Error(`problem with geocoding ${res.status}`);
       return res.json();
     })
     .then(data => {
-      console.log(data);
-      console.log(`You are in ${data.city}, ${data.countryName}`);
-
-      // Fetch country data using the country name from the geocode API
-      return fetch(`https://restcountries.com/v2/name/${data.countryName}`);
+      console.log(`you are in ${data.city}, ${data.country}`);
+      return fetch(`https://restcountries.eu/rest/v2/name/${data.country}`);
     })
     .then(res => {
-      if (!res.ok) throw new Error(`Country not found (${res.status})`);
-
+      if (!res.ok) throw new Error(`problem with geocoding ${res.status}`);
       return res.json();
     })
-    .then(data => renderCountry(data[0])) // Render country data
-    .catch(err => console.error(`${err.message} 💥`)); // Handle errors
+    .then(data => renderCountry(data[0]))
+    .catch(err => console.error(`${err.message}`));
 };
-whereAmI(52.508, 13.381); // Berlin, Germany
-whereAmI(19.037, 72.873); // Mumbai, India
-whereAmI(-33.933, 18.474); // Cape Town, South Africa
+btn.addEventListener('click', whereAmI);
